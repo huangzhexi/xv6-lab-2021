@@ -170,8 +170,9 @@ uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
-
-// plic.c
+void            vmprint(pagetable_t pagetable);
+void            recurvmprint(pagetable_t pagetable, int depth);
+        // plic.c
 void            plicinit(void);
 void            plicinithart(void);
 int             plic_claim(void);

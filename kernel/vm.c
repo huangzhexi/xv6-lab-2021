@@ -97,6 +97,24 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
   return &pagetable[PX(0, va)];
 }
 
+// Return the address of the PTE in page table pagetable
+// that corresponds to virtual address va.  If alloc!=0,
+// create any required page-table pages.
+pte_t *
+walk2(pagetable_t pagetable, uint64 va, int alloc) {
+
+    for (int i = 2; i > 0; i--) {
+        pte_t *pte = &pagetable[(va >> 12 >> (2*i)) & 0x1FF];
+        if (*pte & PTE_V) {
+            pagetable = (pagetable_t) (((*pte) >> 10) << 12);
+        } else {
+//            if (!alloc || pagetable = )
+        };
+    }
+    return &pagetable[(va >> 12) & 0xFF];
+}
+
+
 // Look up a virtual address, return the physical address,
 // or 0 if not mapped.
 // Can only be used to look up user pages.
@@ -430,5 +448,41 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return 0;
   } else {
     return -1;
+  }
+}
+void
+vmprint(pagetable_t pagetable)
+{
+  recurvmprint(pagetable, 0);
+}
+
+void
+recurvmprint(pagetable_t pagetable, int depth) {
+  if(depth == 0){
+    printf("page table %p\n", pagetable);
+  }
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
+      // this PTE points to a lower-level page table.
+      uint64 child = PTE2PA(pte);
+      if(depth == 0){
+        printf("..%d: pte %p pa %p\n", i, pte, child);
+      }else if(depth == 1){
+        printf(".. ..%d: pte %p pa %p\n", i, pte, child);
+      }else{
+        printf(".. .. ..%d: pte %p pa %p\n", i, pte, child);
+      }
+      recurvmprint((pagetable_t)child, depth+1);
+    }else if(pte & PTE_V){
+      uint64 pa = PTE2PA(pte);
+      if(depth == 0){
+        printf("..%d: pte %p pa %p\n", i, pte, pa);
+      }else if(depth == 1){
+        printf(".. ..%d: pte %p pa %p\n", i, pte, pa);
+      }else{
+        printf(".. .. ..%d: pte %p pa %p\n", i, pte, pa);
+      }
+    }
   }
 }
