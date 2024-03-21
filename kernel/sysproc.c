@@ -76,14 +76,58 @@ sys_sleep(void)
 }
 
 
-#ifdef LAB_PGTBL
+//#ifdef LAB_PGTBL
 int
 sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+  uint64 va;
+  int page_num;
+  uint64 mask_addr;
+  uint32 mask = 0;
+  if (argaddr(0, &va) < 0 ) {
+    return -1;
+  }
+
+  if (argint(1, &page_num) < 0) {
+    return -1;
+  }
+
+  if (argaddr(2, &mask_addr) < 0) {
+    return -1;
+  }
+  if (page_num > 64) {
+    return -1;
+  }
+  uint64  curr_va;
+    pagetable_t pgtbl = myproc()->pagetable;
+    for (int i = 0; i < page_num; i++) {
+
+        curr_va = va + i * PGSIZE;
+        uint64* pa = walk(pgtbl, curr_va, 0);
+        if (pa == 0) {
+
+      return -1;
+        }
+        if ((*pa & PTE_V )== 0) {
+            return -1;
+        }
+        if ((*pa & PTE_U )== 0) {
+            return -1;
+        }
+        if (*pa & PTE_A) {
+            *pa = *pa & ~PTE_A;
+            mask = mask | (1 << i);
+        }
+    }
+    if (copyout(pgtbl, mask_addr, (char *)&mask, sizeof(mask)) < 0 ) {
+        printf("here\n");
+
+        return -1;
+
+    }
   return 0;
 }
-#endif
+//#endif
 
 uint64
 sys_kill(void)
@@ -107,3 +151,4 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+

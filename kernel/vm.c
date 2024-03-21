@@ -58,6 +58,7 @@ kvminit(void)
 
 // Switch h/w page table register to the kernel's page table,
 // and enable paging.
+// "hart"是"hardware thread"的缩写。它是RISC-V系统中可以独立调度和执行指令的最小硬件单位。每个hart都有自己的一组寄存器和程序计数器。
 void
 kvminithart()
 {
