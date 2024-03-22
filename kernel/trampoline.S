@@ -26,7 +26,7 @@ uservec:
         
 	# swap a0 and sscratch
         # so that a0 is TRAPFRAME
-        csrrw a0, sscratch, a0
+        csrrw a0, sscratch, a0 # swp the content of a0 and sscratch (prev set point to the trap frame)
 
         # save the user registers in TRAPFRAME
         sd ra, 40(a0)
@@ -137,5 +137,5 @@ userret:
         csrrw a0, sscratch, a0
         
         # return to user mode and user pc.
-        # usertrapret() set up sstatus and sepc.
-        sret
+        # usertrapret() set up sstatus and sepc. sepc: exception pc, stvev: Trap-Vector Base-Address Registe
+        sret # sret: supervisor return.

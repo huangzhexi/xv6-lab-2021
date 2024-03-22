@@ -132,3 +132,17 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+void
+backtrace(void)
+{
+    uint64 cur_fp = r_fp();
+    while(cur_fp != PGROUNDDOWN(cur_fp)) // caller的prev fp指向栈顶。
+    {
+        printf("hello\n");
+        printf("%p\n", *(uint64 *)(cur_fp - 8));
+        cur_fp = *(uint64 *)(cur_fp - 16);
+    }
+    // note : uint64* - 1 是减去一个uint64字节。
+    printf("%p\n", (uint64 *)(cur_fp));
+}
