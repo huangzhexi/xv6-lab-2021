@@ -67,6 +67,27 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+
+    if (which_dev == 2) {
+//        if (p->alarmAddr != 0) {
+            p->cnt ++;
+//        }
+//        printf("here1");
+//        printf("tick: %d, cnt: %d", p->tick, p->cnt);
+        if (p->allow_handler) {
+
+            if (p->tick == p->cnt) {
+//                printf("here2");
+                p->savedTrapframe = *p->trapframe;
+                p->trapframe->epc = p->alarmAddr;
+                p->cnt = 0;
+                p->allow_handler = 0;
+            }
+        }
+
+        yield();
+
+    }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
@@ -218,3 +239,28 @@ devintr()
   }
 }
 
+uint64 sys_sigalarm(void) {
+    int tick;
+    uint64 addr;
+    if (argint(0, &tick) < 0) {
+        return -1;
+    }
+    if (argaddr(1, &addr) < 0) {
+        return -1;
+    }
+    struct proc *p = myproc();
+    p->allow_handler = 1;
+
+    p->tick = tick;
+    p->alarmAddr = addr;
+    return 0;
+}
+
+
+uint64 sys_sigreturn(void) {
+    struct proc *p = myproc();
+    *p->trapframe = p->savedTrapframe;
+    p->allow_handler = 1;
+
+    return 0;
+};
